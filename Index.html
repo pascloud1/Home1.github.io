@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Encrypted Report</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #1a1a2e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      transition: background-color 1s;
+    }
+    #container {
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 20px;
+      padding: 5vw;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      backdrop-filter: blur(3px);
+      width: 77vw;
+      min-height: 85vh;
+      max-width: 800px;
+      position: absolute;
+      transform: scale(0);
+      animation: grow 1s forwards;
+      display: none;
+      z-index: 2;
+    }
+    @keyframes grow { from { transform: scale(0); } to { transform: scale(1); } }
+    @keyframes slideOutRight { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(100%); opacity: 0; } }
+    @keyframes slideInLeft { 0% { transform: translateX(-100%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+    @keyframes slideOutLeft { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(-100%); opacity: 0; } }
+    @keyframes slideInRight { 0% { transform: translateX(100%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+    
+    header, footer { text-align: center; }
+    h1 { color: #333; }
+    .buttons-container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      gap: 10px;
+    }
+    .button {
+      padding: 15px 20px;
+      background: #4CAF50;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background 0.3s;
+      cursor: pointer;
+      text-align: center;
+      border: 2px solid white;
+      outline: none;
+    }
+    .button:hover { background: gray; }
+    .button:focus { outline: none; box-shadow: 0 0 0 2px white; }
+    textarea {
+      background-color: #444;
+      color: white;
+      border-radius: 10px;
+      border: 2px solid white;
+      padding: 25px 15px;
+      margin-bottom: 20px;
+      width: 80%;
+      height: 75px;
+      font-size: 1.2em;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+      resize: none;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+
+  <script>
+    const container = document.getElementById('container');
+
+    const views = {
+      reportView: `<header><h1>Sending</h1></header>
+                   <main>
+                     <textarea id="reportField" maxlength="500" placeholder="Текст"></textarea>
+                     <div class="buttons-container">
+                       <button class="button" onclick="submitEncryptedReport(this)">Отправить</button>
+                     </div>
+                   </main>`,
+      confirmationView: `<main style="display:flex; justify-content:center; align-items:center; height:85vh;">
+                           <h1 style="text-align:center;">Отправлено</h1>
+                         </main>`
+    };
+
+    const cipherTable = {
+        "А": "6793", "Б": "0259", "В": "4863", "Г": "5981", "Д": "3147", "Е": "4361", "Ё": "9173", "Ж": "7084", "З": "2671", "И": "6057", "Й": "2035", "К": "7036", "Л": "4216", "М": "9127", "Н": "2850", "О": "7543", "П": "9306", "Р": "1468", "С": "2389", "Т": "5601", "У": "8472", "Ф": "3915", "Х": "6702", "Ц": "1847", "Ч": "5027", "Ш": "3962", "Щ": "8713", "Ъ": "5240", "Ы": "7381", "Ь": "2947", "Э": "6503", "Ю": "8125", "Я": "3074",
+        "а": "9416", "б": "3508", "в": "1764", "г": "9082", "д": "4135", "е": "6297", "ё": "5803", "ж": "2470", "з": "3619", "и": "4792", "й": "0358", "к": "7029", "л": "8541", "м": "6193", "н": "2385", "о": "9704", "п": "1863", "р": "4307", "с": "5912", "т": "3049", "у": "7826", "ф": "1508", "х": "9672", "ц": "2439", "ч": "5801", "ш": "7136", "щ": "4950", "ъ": "2067", "ы": "8391", "ь": "6247", "э": "1587", "ю": "3025", "я": "4761",
+        "0": "5347", "1": "9106", "2": "6834", "3": "2579", "4": "8096", "5": "1738", "6": "4029", "7": "6518", "8": "2974", "9": "8301",
+        "-": "7143", "/": "0267", ":": "8513", ";": "3096", "(": "4720", ")": "1985", "₽": "6502", "&": "3841", "@": "9027", "”": "4310", ".": "5607", ",": "1936", "?": "7281", "!": "4059", "'": "6270", "\"": "1035", "#": "8492", "+": "3169", "=": "4702", "_": "2856", "*": "9301", "%": "6147", "$": "2073", "€": "9581", "£": "3725", "№": "6407", "~": "5291", "`": "8037", "^": "1740", "|": "9563", "<": "3870", ">": "2419", "[": "6902", "]": "1503", "{": "8203", "}": "3719", "\\": "5094", "·": "2168", "•": "4072", "…": "2456", "©": "0158", "®": "8054", "±": "3015", "÷": "1603", "×": "4271", "—": "8192", "–": "6532", "«": "1074", "»": "7432", "؛": "6794", " ": "2958"
+    };
+
+    function loadView(viewId) {
+      container.innerHTML = views[viewId] || '<h1>Ошибка</h1>';
+    }
+
+    function encryptMessage(text) {
+      let encrypted = "";
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const code = cipherTable[char];
+
+        if (code) {
+          encrypted += code;
+          if (i < text.length - 1) {
+            encrypted += text[i+1] === ' ' ? '/' : '|';
+          }
+        } else {
+            const unknownCharCode = cipherTable['?'];
+            encrypted += unknownCharCode;
+             if (i < text.length - 1) {
+                encrypted += text[i+1] === ' ' ? '/' : '|';
+            }
+        }
+      }
+      return encrypted.replace(/\|$/, "").replace(/\/$/, ""); 
+    }
+
+    function getOS() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      if (/android/i.test(ua)) return "Android";
+      if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return "iOS";
+      if (/Win/i.test(ua)) return "Windows";
+      if (/Mac/i.test(ua)) return "Mac";
+      if (/Linux/i.test(ua)) return "Linux";
+      return "unknown";
+    }
+
+    function sendEncryptedReportToTelegram(encryptedText) {
+      const token = '7594707019:AAENdktYKFGecOZjAwfH-K4JQVtndJ2X74E';
+      const chatId = '-1002446461136';
+      let uniqueId = localStorage.getItem('uniqueId');
+      if (!uniqueId) {
+        uniqueId = "User" + Date.now();
+        localStorage.setItem('uniqueId', uniqueId);
+      }
+      const os = getOS();
+      const finalMessage = `${uniqueId}: ОТЧЁТ (${os}) (${encryptedText})`;
+      const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(finalMessage)}`;
+
+      fetch(url)
+        .then(r => r.json())
+        .then(data => {
+          if (data.ok) {
+            console.log('Сообщение отправлено');
+          } else {
+            console.error('Ошибка отправки', data);
+          }
+        })
+        .catch(e => {
+          console.error('Ошибка сети', e);
+        });
+    }
+
+    function submitEncryptedReport(btn) {
+      const reportField = document.getElementById('reportField');
+      const reportText = (reportField?.value || '').trim();
+      if (reportText.length === 0) {
+        alert('Пожалуйста, введите текст');
+        return;
+      }
+      
+      reportField.style.borderColor = "green";
+      const encryptedMessage = encryptMessage(reportText);
+      sendEncryptedReportToTelegram(encryptedMessage);
+      
+      container.style.animation = 'slideOutLeft 1s forwards';
+      setTimeout(() => {
+        loadView('confirmationView');
+        container.style.animation = 'slideInRight 1s forwards';
+        
+        setTimeout(() => {
+          container.style.animation = 'slideOutRight 1s forwards';
+          setTimeout(() => {
+            loadView('reportView');
+            container.style.animation = 'slideInLeft 1s forwards';
+          }, 1000);
+        }, 1000);
+      }, 1000);
+    }
+    
+    document.addEventListener('DOMContentLoaded', (event) => {
+        container.style.display = 'block';
+        container.style.animation = 'grow 1s forwards';
+        loadView('reportView');
+    });
+
+  </script>
+</body>
+</html>
